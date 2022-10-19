@@ -67,6 +67,8 @@ export const SetProfile = () => {
       }
     },
     onError(error, variables, context) {
+      console.log(error)
+
       showMessage({
         // 에러 안내 메세지
         message: '닉네임 중복 확인 중 에러가 발생했습니다',
@@ -81,7 +83,6 @@ export const SetProfile = () => {
         },
         floating: true,
       })
-      console.log(error)
     },
   })
 

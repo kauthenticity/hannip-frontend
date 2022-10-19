@@ -760,3 +760,36 @@ export type ISignUpRequestDto = {
   nickname: string
   url: string
 }
+
+export type ISignInDto = {
+  nickname: string
+  profileUrl: string
+  token: string
+  userCategoryDtoList: {
+    categoryId: number
+    id: number
+  }[]
+}
+
+export type IUserDto = {
+  createDate: string
+  email: string
+  id: 0
+  nickname: string
+  profileUrl: string
+  updateDate: string
+  userBlockList: {
+    banUserId: number
+    id: number
+  }[]
+
+  userCategoryDtoList: {
+    categoryId: number
+    id: number
+  }[]
+
+  userFavoritesList: {
+    id: number
+    nanumId: number
+  }[]
+}

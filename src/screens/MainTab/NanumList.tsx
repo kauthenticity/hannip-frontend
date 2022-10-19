@@ -22,7 +22,7 @@ const NanumList = () => {
   const navigation = useNavigation()
   const user = useAppSelector(state => state.auth.user)
   console.log('user:', user)
-  const currentCategory = user.accountCategoryDtoList[0]
+  //const currentCategory = user.accountCategoryDtoList[0]
   const queryClient = useQueryClient()
 
   // ******************** states ********************
@@ -43,60 +43,60 @@ const NanumList = () => {
     title: '',
     nanumIdx: 0,
   })
-  useEffect(() => {
-    setUserCategory(currentCategory)
-  }, [currentCategory])
+  // useEffect(() => {
+  //   setUserCategory(currentCategory)
+  // }, [currentCategory])
 
   // ******************** react query ********************
   // 카테고리가 설정되지 않았을 때 (로그인하지 않았을 때) 전부 불러오기
-  const nanumAllByRecent = useQuery([queryKeys.nanumList], getNanumAllByRecent, {
-    onSuccess(data) {
-      setRefreshing(false)
-      setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
-    },
-    enabled: isLoggedIn == false && itemFilter == '최신순', // 로그인 하지 않았을 때 전체 보기
-  })
+  // const nanumAllByRecent = useQuery([queryKeys.nanumList], getNanumAllByRecent, {
+  //   onSuccess(data) {
+  //     setRefreshing(false)
+  //     setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
+  //   },
+  //   enabled: isLoggedIn == false && itemFilter == '최신순', // 로그인 하지 않았을 때 전체 보기
+  // })
 
-  const nanumAllByFavorites = useQuery([queryKeys.nanumList], getNanumAllByFavorites, {
-    onSuccess(data) {
-      setRefreshing(false)
-      setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
-    },
-    enabled: isLoggedIn == false && itemFilter == '인기순', // 로그인 하지 않았을 때 전체 보기
-  })
+  // const nanumAllByFavorites = useQuery([queryKeys.nanumList], getNanumAllByFavorites, {
+  //   onSuccess(data) {
+  //     setRefreshing(false)
+  //     setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
+  //   },
+  //   enabled: isLoggedIn == false && itemFilter == '인기순', // 로그인 하지 않았을 때 전체 보기
+  // })
 
-  const nanumByRecent = useQuery(
-    [queryKeys.nanumList, userCategory],
-    () => getNanumByRecent({category: userCategory.categoryName, accountIdx: user.accountIdx}),
-    {
-      onSuccess: data => {
-        setRefreshing(false) // 새로고침중이면 로딩 종료
-        setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
+  // const nanumByRecent = useQuery(
+  //   [queryKeys.nanumList, userCategory],
+  //   () => getNanumByRecent({category: userCategory.categoryName, accountIdx: user.accountIdx}),
+  //   {
+  //     onSuccess: data => {
+  //       setRefreshing(false) // 새로고침중이면 로딩 종료
+  //       setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
 
-        if (nanumMethodFilter !== '전체') {
-          // 현재 오프라인, 온라인 필터가 설정된 경우엔 보여질 아이템 재설정
-          //onPressLocationFilter(nanumMethodFilter)
-        }
-      },
-      enabled: isLoggedIn == true && itemFilter == '최신순', // 필터가 최신순으로 설정됐을 때만
-    },
-  )
+  //       if (nanumMethodFilter !== '전체') {
+  //         // 현재 오프라인, 온라인 필터가 설정된 경우엔 보여질 아이템 재설정
+  //         //onPressLocationFilter(nanumMethodFilter)
+  //       }
+  //     },
+  //     enabled: isLoggedIn == true && itemFilter == '최신순', // 필터가 최신순으로 설정됐을 때만
+  //   },
+  // )
 
-  // 카테고리가 설정 됐을 때 인기순
-  const nanumByFaavorites = useQuery(
-    [queryKeys.nanumList, userCategory],
-    () => getNanumByPopularity({category: userCategory.categoryName, accountIdx: user.accountIdx}),
-    {
-      onSuccess(data) {
-        setRefreshing(false) // 새로고침중이면 로딩 종료
-        setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
-      },
-      onError(err) {
-        console.log(err)
-      },
-      enabled: isLoggedIn == true && itemFilter == '인기순',
-    },
-  )
+  // // 카테고리가 설정 됐을 때 인기순
+  // const nanumByFaavorites = useQuery(
+  //   [queryKeys.nanumList, userCategory],
+  //   () => getNanumByPopularity({category: userCategory.categoryName, accountIdx: user.accountIdx}),
+  //   {
+  //     onSuccess(data) {
+  //       setRefreshing(false) // 새로고침중이면 로딩 종료
+  //       setSharings(data.filter((item: INanumListItem) => item.block == 'N'))
+  //     },
+  //     onError(err) {
+  //       console.log(err)
+  //     },
+  //     enabled: isLoggedIn == true && itemFilter == '인기순',
+  //   },
+  // )
   // 카테고리가 설정 됐을 때 최신순
 
   // ******************** callbacks ********************
@@ -167,13 +167,13 @@ const NanumList = () => {
         </View>
       </View>
 
-      <CategoryDropdown
+      {/* <CategoryDropdown
         showCategoryModal={showSelectCategoryModal}
         setShowCategoryModal={setShowSelectCategoryModal}
         userCategory={userCategory}
         setUserCategory={setUserCategory}
         categories={user.accountCategoryDtoList}
-      />
+      /> */}
 
       <View style={{flex: 1}}>
         <Banner imageUri={bannerInfo.imageUri} title={bannerInfo.title} nanumIdx={bannerInfo.nanumIdx} />
@@ -185,7 +185,20 @@ const NanumList = () => {
             setShowItemFilterBottomSheet={setShowItemFilterBottomSheet}
             //onPressLocationFilter={onPressLocationFilter}
           />
-          {sharings.length == 0 ? (
+          <ScrollView
+            contentContainerStyle={{justifyContent: 'center', alignItems: 'center', flex: 1}}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            showsVerticalScrollIndicator={false}>
+            <EmptyIcon style={{marginBottom: 32}} />
+            <View>
+              <Text style={[theme.styles.bold20, {marginBottom: 8, textAlign: 'center'}]}>현재 나눔 리스트가 비어있어요.</Text>
+              <View>
+                <Text style={[{color: theme.gray700, fontSize: 16, textAlign: 'center'}, theme.styles.text16]}>하단의 + 버튼을 눌러</Text>
+                <Text style={[{color: theme.gray700, fontSize: 16, textAlign: 'center'}, theme.styles.text16]}>보다 손쉽게 나눔을 진행해 보세요!</Text>
+              </View>
+            </View>
+          </ScrollView>
+          {/* {sharings.length == 0 ? (
             <ScrollView
               contentContainerStyle={{justifyContent: 'center', alignItems: 'center', flex: 1}}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -216,7 +229,7 @@ const NanumList = () => {
               columnWrapperStyle={{justifyContent: 'space-between', marginBottom: 20}}
               onRefresh={onRefresh}
             />
-          )}
+          )} */}
         </View>
       </View>
 

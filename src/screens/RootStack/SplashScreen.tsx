@@ -8,9 +8,9 @@ import LinearGradient from 'react-native-linear-gradient'
 import axios from 'axios'
 
 import * as theme from '../../theme'
-import {getString, removeString} from '../../hooks'
-import {storeAccessToken, login} from '../../redux/slices'
-import {getAccountInfoByIdx} from '../../api'
+import {getString, removeString, storeString} from '../../hooks'
+import {storeToken, login} from '../../redux/slices'
+import {getAccountInfoByIdx, signIn, getUserInfo, queryKeys} from '../../api'
 import {useAppDispatch} from '../../hooks'
 import {removeListener} from '@reduxjs/toolkit'
 import {LogoWhiteIcon} from '../../components/utils'
@@ -38,32 +38,42 @@ export const SplashScreen = () => {
   const dispatch = useAppDispatch()
   const navigation = useNavigation()
 
-  const getAccountInfoQuery = useMutation('init', getAccountInfoByIdx, {
-    onSuccess(data, variables, context) {
-      console.log('data :', data)
-      if (data == undefined) {
-        removeString('accountIdx')
-      } else {
-        dispatch(
-          login({
-            ...data,
-            holdingSharingCnt: 6,
-            participateSharingCnt: 7,
-          }),
-        )
-      }
+  // const getAccountInfoQuery = useMutation('init', getAccountInfoByIdx, {
+  //   onSuccess(data, variables, context) {
+  //     console.log('data :', data)
+  //     if (data == undefined) {
+  //       removeString('accountIdx')
+  //     } else {
+  //       dispatch(
+  //         login({
+  //           ...data,
+  //           holdingSharingCnt: 6,
+  //           participateSharingCnt: 7,
+  //         }),
+  //       )
+  //     }
 
+  //     navigation.navigate('MainTabNavigator')
+  //   },
+  //   onError(error, variables, context) {
+  //     // 해당 accountIdx 없음
+  //     // 예를 들어 아이폰, 아이패드 둘 다 에서 사용하는데 아이패드에서 탈퇴하고 아이폰에서 앱을 킨 경우
+  //     if (error.response.status == 500) {
+  //       console.log('here')
+  //       removeString('accountIdx').then(res => {
+  //         navigation.navigate('MainTabNavigator')
+  //       })
+  //     }
+  //   },
+  // })
+  const getUserInfoQuery = useMutation(queryKeys.accountInfo, getUserInfo, {
+    onSuccess(data, variables, context) {
+      delete data.password
+      delete data.userRole
+      dispatch(login(data))
+      storeString('id', data.id.toString()) // accountIdx를 async storage에 저장
+      storeString('email', data.email) //이메일도 async storage에 저장
       navigation.navigate('MainTabNavigator')
-    },
-    onError(error, variables, context) {
-      // 해당 accountIdx 없음
-      // 예를 들어 아이폰, 아이패드 둘 다 에서 사용하는데 아이패드에서 탈퇴하고 아이폰에서 앱을 킨 경우
-      if (error.response.status == 500) {
-        console.log('here')
-        removeString('accountIdx').then(res => {
-          navigation.navigate('MainTabNavigator')
-        })
-      }
     },
   })
 
@@ -114,17 +124,15 @@ export const SplashScreen = () => {
 
   useEffect(() => {
     // async storage에서 access token을 가져온다.
-    getString('accesssToken').then(accessToken => {
+    getString('token').then(token => {
       // access token이 없으면 main tab navigator로 이동
-      if (accessToken == null || accessToken == undefined) {
+      if (token == null || token == undefined || token == '') {
         navigation.navigate('MainTabNavigator')
       }
       // access token이 있으면 apiClient에 저장.
       else {
-        // axios에 default header로 access token을 넣어줌.
-        // post할때만 넣어줌 ....
-        axios.defaults.headers.post['Authorization'] = `Bearer ${accessToken}`
-
+        dispatch(storeToken(token))
+        getUserInfoQuery.mutate()
         // 로그인 시키는 로직 추가해야 함
       }
     })

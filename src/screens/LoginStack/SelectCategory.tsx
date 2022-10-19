@@ -9,10 +9,10 @@ import {SelectCategoryRouteProps} from '../../navigation/LoginStackNavigator'
 import {StackHeader, Button, CheckboxMainIcon, FloatingBottomButton, XIcon, XSmallIcon} from '../../components/utils'
 import {EmptyResult, SearchStar} from '../../components/LoginStack'
 import * as theme from '../../theme'
-import {IAccountCategoryDto, IAccountDto, ICategoryDto, ISignUpRequestDto} from '../../types'
-import {login as ReduxLogin} from '../../redux/slices'
+import {ICategoryDto, ISignUpRequestDto} from '../../types'
+import {login as ReduxLogin, storeToken} from '../../redux/slices'
 import {useAppDispatch, storeString} from '../../hooks'
-import {queryKeys, postSignUp, searchCategory, getAccountInfoByIdx, getCategoryAll, signUp} from '../../api'
+import {queryKeys, getCategoryAll, signUp, signIn, getUserInfo} from '../../api'
 import FastImage from 'react-native-fast-image'
 
 const BUTTON_GAP = 10
@@ -45,6 +45,8 @@ export const SelectCategory = () => {
       setSignUpSuccess(true)
       // 회원 가입 성공하면 백단에서 보내준 accountIdx로 계정 정보를 불러옴.
       //getAccountInfoByIdxQuery.mutate(data)
+
+      signInQuery.mutate(email)
     },
     onError(error) {
       showMessage({
@@ -89,20 +91,12 @@ export const SelectCategory = () => {
     },
   })
 
-  const getAccountInfoByIdxQuery = useMutation(queryKeys.accountInfo, getAccountInfoByIdx, {
+  const signInQuery = useMutation(queryKeys.accountInfo, signIn, {
     onSuccess(data, variables, context) {
-      console.log(data)
-      // data.accountCategoryDtoList = [
-      //   {
-      //     job: '가수',
-      //     category: '아이유',
-      //     accountIdx: data.accountIdx,
-      //   },
-      // ]
-      dispatch(ReduxLogin(data)) // 백단에서 받아온 계정 정보를 리덕스에 저장
-      storeString('accountIdx', data.accountIdx.toString()) // accountIdx를 async storage에 저장
-      storeString('email', data.email) //이메일도 async storage에 저장
-      navigation.navigate('MainTabNavigator')
+      // 토큰 리덕스에 저장
+      dispatch(storeToken(data.token))
+      storeString('token', data.token)
+      getUserInfoQuery.mutate()
     },
     onError(error, variables, context) {
       showMessage({
@@ -129,7 +123,16 @@ export const SelectCategory = () => {
       setResult(data.categoryListResponses.content)
     },
   })
-
+  const getUserInfoQuery = useMutation(queryKeys.accountInfo, getUserInfo, {
+    onSuccess(data, variables, context) {
+      delete data.password
+      delete data.userRole
+      dispatch(ReduxLogin(data))
+      storeString('id', data.id.toString()) // accountIdx를 async storage에 저장
+      storeString('email', data.email) //이메일도 async storage에 저장
+      navigation.navigate('MainTabNavigator')
+    },
+  })
   // ******************** callbacks  ********************
   // 검색 호출 시
   const searchKeyword = useCallback(
@@ -160,6 +163,7 @@ export const SelectCategory = () => {
       nickname: name,
       url: profileImage,
     }
+    console.log(JSON.stringify(signUpForm))
     // 회원 가입 post api 호출
     signUpQuery.mutate(signUpForm)
   }, [userSelectedCategories, signUpQuery])

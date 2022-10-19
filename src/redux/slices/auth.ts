@@ -1,6 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {createDraftSafeSelector} from '@reduxjs/toolkit'
-import {IAccountCategoryDto, IAccountDto} from '../../types'
+import {IAccountCategoryDto, IAccountDto, IUserDto} from '../../types'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 //Each slice file should define a type for its initial state value,
@@ -22,51 +22,66 @@ export interface Auth {
   user: User
   accessToken: string
   refreshToken: string
+  token: string
 }
 
 const initialState = {
   isLoggedIn: false,
   user: {
+    //   email: '',
+    //   creatorId: '',
+    //   accountCategoryDtoList: [
+    //     {
+    //       job: '가수',
+    //       categoryName: '전체보기',
+    //       accountIdx: 0,
+    //       categoryIdx: 0,
+    //     },
+    //   ],
+    //   accountImg: '',
+    //   holdingSharingCnt: 0,
+    //   participateSharingCnt: 0,
+    //   accountIdx: 0,
+    //   creatorIdDatetime: '1997-01-01 00:00:00',
+    // } as User,
+    // accessToken: '',
+    // refreshToken: '',
+    createDate: '1997-01-01 00:00:00',
     email: '',
-    creatorId: '',
-    accountCategoryDtoList: [
+    id: 0,
+    nickname: '',
+    profileUrl: '',
+    updateDate: '1997-01-01 00:00:00',
+    userBlockList: [{banUserId: 0, id: 0}],
+    userCategoryDtoList: [
       {
-        job: '가수',
-        categoryName: '전체보기',
-        accountIdx: 0,
-        categoryIdx: 0,
+        categoryId: 0,
+        id: 0,
       },
     ],
-    accountImg: '',
-    holdingSharingCnt: 0,
-    participateSharingCnt: 0,
-    accountIdx: 0,
-    creatorIdDatetime: '1997-01-01 00:00:00',
-  } as User,
-  accessToken: '',
-  refreshToken: '',
+    userFavoritesList: [{nanumId: 0, id: 0}],
+  },
+  token: '',
 }
 
 export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<User>) => {
+    login: (state, action: PayloadAction<IUserDto>) => {
       state.isLoggedIn = true
+      state.user.createDate = action.payload.createDate
       state.user.email = action.payload.email
-      state.user.creatorId = action.payload.creatorId
-      state.user.accountImg = action.payload.accountImg
-      state.user.accountCategoryDtoList = action.payload.accountCategoryDtoList
-      state.user.holdingSharingCnt = action.payload.holdingSharingCnt
-      state.user.participateSharingCnt = action.payload.participateSharingCnt
-      state.user.accountIdx = action.payload.accountIdx
-      state.user.creatorIdDatetime = action.payload.creatorIdDatetime
+      state.user.id = action.payload.id
+      state.user.nickname = action.payload.nickname
+      state.user.profileUrl = action.payload.profileUrl
+      state.user.updateDate = action.payload.updateDate
+      state.user.userBlockList = action.payload.userBlockList
+      state.user.userCategoryDtoList = action.payload.userCategoryDtoList
+      state.user.userFavoritesList = action.payload.userFavoritesList
     },
-    storeAccessToken: (state, action: PayloadAction<string>) => {
-      state.accessToken = action.payload
-    },
-    storeRefreshToken: (state, action: PayloadAction<string>) => {
-      state.refreshToken = action.payload
+    storeToken: (state, action: PayloadAction<string>) => {
+      state.token = action.payload
     },
     logout: state => {
       //AsyncStorage.removeItem('accessToken')
@@ -74,19 +89,22 @@ export const authSlice = createSlice({
 
       return initialState
     },
-    updateProfileImage: (state, action: PayloadAction<string>) => {
-      state.user.accountImg = action.payload
-    },
-    updateName: (state, action: PayloadAction<string>) => {
-      state.user.creatorId = action.payload
-    },
-    updateCategory: (state, action: PayloadAction<IAccountCategoryDto[]>) => {
-      state.user.accountCategoryDtoList = action.payload
-    },
+
+    // updateProfileImage: (state, action: PayloadAction<string>) => {
+    //   state.user.accountImg = action.payload
+    // },
+    // updateName: (state, action: PayloadAction<string>) => {
+    //   state.user.creatorId = action.payload
+    // },
+    // updateCategory: (state, action: PayloadAction<IAccountCategoryDto[]>) => {
+    //   state.user.accountCategoryDtoList = action.payload
+    // },
   },
 })
 
 const selectSelf = (state: Auth) => state
 export const userSelector = createDraftSafeSelector(selectSelf, state => state.user)
 export default authSlice.reducer
-export const {login, storeAccessToken, storeRefreshToken, logout, updateProfileImage, updateName, updateCategory} = authSlice.actions
+export const {login, storeToken, logout} = authSlice.actions
+
+export const token = (state: Auth) => state.token
