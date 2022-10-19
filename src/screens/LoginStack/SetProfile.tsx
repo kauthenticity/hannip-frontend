@@ -53,8 +53,9 @@ export const SetProfile = () => {
 
   const checkNicknameDuplicatedQuery = useMutation(queryKeys.nicknameDuplicated, checkNicknameDuplicated, {
     onSuccess(data, variables, context) {
+      console.log(data)
       // 같은 닉네임을 찾지 못해서 응답이 blank이면
-      if (data == '가능한 닉네임') {
+      if (data.message == '가능한 닉네임') {
         // 카테고리 선택 창으로 이동
         navigation.navigate('SelectCategory', {email: route.params.email, name, profileImage: image})
       }
