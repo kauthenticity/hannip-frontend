@@ -12,7 +12,7 @@ import {SetProfileRouteProps} from '../../navigation/LoginStackNavigator'
 import {StackHeader, SelectImageIcon, FloatingBottomButton, CheckboxIcon, DownArrowIcon, RightArrowIcon} from '../../components/utils'
 import NoUserSvg from '../../assets/Icon/noUser.svg'
 import * as theme from '../../theme'
-import {queryKeys, uploadProfileImage, checkNicknameDuplicated} from '../../api'
+import {queryKeys, uploadProfileImage, checkNicknameDuplicated, setInitialProfileImage} from '../../api'
 import {gray700, PADDING_SIZE} from '../../theme'
 
 const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/
@@ -27,10 +27,12 @@ export const SetProfile = () => {
   const [optionalSelected, setOptionalSelected] = useState<boolean>(false)
 
   // ****************** react queris  ******************
-  const uploadImageQuery = useMutation(queryKeys.nanumImage, uploadProfileImage, {
+  const setInitialProfileImageQuery = useMutation(queryKeys.nanumImage, setInitialProfileImage, {
     onSuccess(data) {
       console.log('Image upload to s3 completed successfully')
-      setImage(data) // 이미지 저장 성공하면 s3 url을 images 배열에 저장
+
+      // 이미지 저장 성공하면 s3 url을 images 배열에 저장
+      setImage(data.message)
     },
     onError(error) {
       showMessage({
@@ -187,12 +189,12 @@ export const SetProfile = () => {
         return
       }
       let formData = new FormData()
-      formData.append('profileImg', {
+      formData.append('profile', {
         uri: response.assets[0].uri,
         type: 'multipart/form-data',
         name: 'image.jpg',
       })
-      uploadImageQuery.mutate(formData) // s3에 이미지 저장
+      setInitialProfileImageQuery.mutate(formData) // s3에 이미지 저장
     }
   }, [])
 
@@ -249,7 +251,7 @@ export const SetProfile = () => {
           {image == '' ? (
             <Pressable style={[styles.image, styles.selectImage]} onPress={onPressImage}>
               <NoUserSvg width={54} height={54} />
-              <ActivityIndicator animating={uploadImageQuery.isLoading} style={{position: 'absolute'}} />
+              <ActivityIndicator animating={setInitialProfileImageQuery.isLoading} style={{position: 'absolute'}} />
             </Pressable>
           ) : (
             <Pressable onPress={onPressImage}>
@@ -260,7 +262,7 @@ export const SetProfile = () => {
                 onLoadEnd={() => {
                   setIsLoading(false)
                 }}>
-                <ActivityIndicator animating={uploadImageQuery.isLoading || isLoading == true} />
+                <ActivityIndicator animating={setInitialProfileImageQuery.isLoading || isLoading == true} />
               </FastImage>
             </Pressable>
           )}

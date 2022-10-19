@@ -8,3 +8,10 @@ export const apiClient = axios.create({
     //'Content-Type': '*/*',
   },
 })
+
+export const apiImageClient = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'content-type': 'multipart/form-data',
+  },
+})
