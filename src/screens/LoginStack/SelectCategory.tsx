@@ -1,19 +1,18 @@
-import React, {useMemo, useState, useCallback} from 'react'
-import {View, Text, FlatList, StyleSheet, Dimensions, Pressable, Alert} from 'react-native'
+import React, {useMemo, useState, useCallback, useEffect} from 'react'
+import {View, Text, FlatList, StyleSheet, Dimensions, Pressable, Alert, ActivityIndicator} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import {useNavigation, useRoute} from '@react-navigation/native'
-import {useMutation} from 'react-query'
+import {useMutation, useQuery} from 'react-query'
 import {showMessage} from 'react-native-flash-message'
-import moment from 'moment'
 
 import {SelectCategoryRouteProps} from '../../navigation/LoginStackNavigator'
 import {StackHeader, Button, CheckboxMainIcon, FloatingBottomButton, XIcon, XSmallIcon} from '../../components/utils'
 import {EmptyResult, SearchStar} from '../../components/LoginStack'
 import * as theme from '../../theme'
-import {IAccountCategoryDto, IAccountDto, ICategoryDto} from '../../types'
+import {IAccountCategoryDto, IAccountDto, ICategoryDto, ISignUpRequestDto} from '../../types'
 import {login as ReduxLogin} from '../../redux/slices'
 import {useAppDispatch, storeString} from '../../hooks'
-import {queryKeys, postSignUp, searchCategory, getAccountInfoByIdx} from '../../api'
+import {queryKeys, postSignUp, searchCategory, getAccountInfoByIdx, getCategoryAll, signUp} from '../../api'
 import FastImage from 'react-native-fast-image'
 
 const BUTTON_GAP = 10
@@ -33,20 +32,19 @@ export const SelectCategory = () => {
   const {email, name, profileImage} = useMemo(() => route.params, [])
 
   // ******************** states  ********************
-  const [init, setInit] = useState<boolean>(true) // 처음에만 검색해보세요! 화면 띄움
   const [singerSelected, setSingerSelected] = useState(true) // 가수, 배우 대분류 선택
   const [keyword, setKeyword] = useState<string>('') // 검색 키워드
   const [result, setResult] = useState<ICategoryDto[]>([]) // 검색 결과
-  const [userSelectedCategories, setUserSelectedCategories] = useState<IAccountCategoryDto[]>([]) // 사용자가 선택한 카테고리들
+  const [userSelectedCategories, setUserSelectedCategories] = useState<ICategoryDto[]>([]) // 사용자가 선택한 카테고리들
   const [signUpSuccess, setSignUpSuccess] = useState<boolean>(false)
 
   // ******************** react queries  ********************
-  const postSignUpQuery = useMutation(queryKeys.signUp, postSignUp, {
+  const signUpQuery = useMutation(queryKeys.signUp, signUp, {
     // 회원 가입 api
     onSuccess(data) {
       setSignUpSuccess(true)
       // 회원 가입 성공하면 백단에서 보내준 accountIdx로 계정 정보를 불러옴.
-      getAccountInfoByIdxQuery.mutate(data)
+      //getAccountInfoByIdxQuery.mutate(data)
     },
     onError(error) {
       showMessage({
@@ -67,24 +65,10 @@ export const SelectCategory = () => {
     },
   })
 
-  const searchCategoryQuery = useMutation(queryKeys.searchCategory, searchCategory, {
+  const searchCategoryQuery = useMutation(queryKeys.searchCategory, getCategoryAll, {
     // 검색 api
     onSuccess(data, variables, context) {
-      if (data == '') {
-        setResult([])
-      } else {
-        setResult(
-          data.sort((a: ICategoryDto, b: ICategoryDto) => {
-            if (a.nickName < b.nickName) {
-              return -1
-            }
-            if (a.nickName > b.nickName) {
-              return 1
-            }
-            return 0
-          }),
-        )
-      }
+      setResult(data.categoryListResponses.content)
     },
     onError(error, variables, context) {
       showMessage({
@@ -139,22 +123,23 @@ export const SelectCategory = () => {
     },
   })
 
+  const getCategoryQuery = useQuery(queryKeys.category, () => getCategoryAll({sort: 'asc', categoryType: 'singer'}), {
+    onSuccess(data) {
+      console.log(data)
+      setResult(data.categoryListResponses.content)
+    },
+  })
+
   // ******************** callbacks  ********************
   // 검색 호출 시
   const searchKeyword = useCallback(
     // 검색 api 호출
-    (keyword: string) => {
+    (keyword: string, categoryType?: 'singer' | 'actor') => {
       // 입력 값이 없을 때는 리턴
-      //if (keyword == '') return
-      init && setInit(false) // 한번 검색을 하고 나면 init screen은 필요 없음
 
       searchCategoryQuery.mutate({
-        job: singerSelected ? '가수' : '배우',
-        nickName: keyword,
-        birth: '',
-        imgUrl: '',
-        email: '',
-        categoryIdx: 0,
+        categoryType: categoryType ? categoryType : singerSelected ? 'singer' : 'actor',
+        keyword,
       })
       setKeyword('')
     },
@@ -163,26 +148,26 @@ export const SelectCategory = () => {
 
   // 회원 가입 버튼 클릭 시
   const onPressSignUp = useCallback(() => {
-    if (postSignUpQuery.isLoading) {
+    if (signUpQuery.isLoading) {
       return
     }
-    const signUpForm: IAccountDto = {
-      accountCategoryDtoList: userSelectedCategories,
-      accountIdx: 0,
-      creatorId: name,
-      creatorIdDatetime: '',
-      accountImg: profileImage,
-      email: email,
-    }
-    console.log(JSON.stringify(signUpForm))
-    // 회원 가입 post api 호출
-    postSignUpQuery.mutate(signUpForm)
-  }, [userSelectedCategories, postSignUpQuery])
 
-  // 해당 카테고리가 선택됐는지
+    const signUpForm: ISignUpRequestDto = {
+      categoryDtoList: userSelectedCategories.map(item => {
+        return {categoryId: item.categoryId}
+      }),
+      email,
+      nickname: name,
+      url: profileImage,
+    }
+    // 회원 가입 post api 호출
+    signUpQuery.mutate(signUpForm)
+  }, [userSelectedCategories, signUpQuery])
+
+  //해당 카테고리가 선택됐는지
   const isSelected = useCallback(
     (category: ICategoryDto) => {
-      return userSelectedCategories.filter(item => item.job == category.job && item.categoryName == category.nickName).length == 0 ? false : true
+      return userSelectedCategories.filter(item => item.categoryId == category.categoryId).length == 0 ? false : true
     },
     [userSelectedCategories],
   )
@@ -191,33 +176,23 @@ export const SelectCategory = () => {
   const onPressCategory = useCallback(
     (category: ICategoryDto) => {
       if (isSelected(category)) {
-        setUserSelectedCategories(userSelectedCategories.filter(item => item.job != category.job || item.categoryName != category.nickName))
+        setUserSelectedCategories(userSelectedCategories.filter(item => item.categoryId != category.categoryId))
       } else {
         if (userSelectedCategories.length == 5) {
           Alert.alert('최대 5명까지 선택 가능합니다')
           return
         }
-        setUserSelectedCategories(
-          userSelectedCategories.concat({
-            job: category.job,
-            categoryName: category.nickName,
-            accountIdx: 0,
-            categoryIdx: category.categoryIdx,
-          }),
-        )
+        setUserSelectedCategories(userSelectedCategories.concat(category))
       }
     },
     [userSelectedCategories],
   )
 
-  console.log(userSelectedCategories)
-
   // 해당 카테고리를 선택한 카테고리 리스트에서 제거
-  const onPressRemoveCategory = useCallback((param: IAccountCategoryDto) => {
+  const onPressRemoveCategory = useCallback((param: ICategoryDto) => {
     setUserSelectedCategories(userSelectedCategories =>
       userSelectedCategories.filter(item => {
-        console.log(item, param)
-        return item.job != param.job || item.categoryName != param.categoryName
+        return item.categoryId != param.categoryId
       }),
     )
   }, [])
@@ -232,8 +207,8 @@ export const SelectCategory = () => {
             label="가수"
             style={{width: BUTTON_WIDTH}}
             onPress={() => {
-              setInit(true)
               setSingerSelected(true)
+              searchKeyword('', 'singer')
             }}
           />
           <Button
@@ -241,8 +216,8 @@ export const SelectCategory = () => {
             label="배우"
             style={{width: BUTTON_WIDTH}}
             onPress={() => {
-              setInit(true)
               setSingerSelected(false)
+              searchKeyword('', 'actor')
             }}
           />
         </View>
@@ -260,15 +235,15 @@ export const SelectCategory = () => {
             ]}>
             {userSelectedCategories.length > 0 &&
               userSelectedCategories.map(item => (
-                <View key={item.categoryName + item.job} style={[theme.styles.rowFlexStart, {marginBottom: 8}, styles.selectedCategoryButton]}>
-                  <Text style={[{marginRight: 8}, theme.styles.text14]}>{item.categoryName}</Text>
+                <View key={item.categoryId} style={[theme.styles.rowFlexStart, {marginBottom: 8}, styles.selectedCategoryButton]}>
+                  <Text style={[{marginRight: 8}, theme.styles.text14]}>{item.name}</Text>
                   <XSmallIcon size={16} onPress={() => onPressRemoveCategory(item)} />
                 </View>
               ))}
           </View>
-          {init == true ? (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <Text style={theme.styles.bold20}>관심 있는 스타를 검색해 보세요!</Text>
+          {getCategoryQuery.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator />
             </View>
           ) : result.length == 0 ? (
             <EmptyResult />
@@ -281,9 +256,9 @@ export const SelectCategory = () => {
                 <View style={[{width: CIRCLE_SIZE}, index % 3 != 2 && {marginRight: IMAGE_GAP}]}>
                   <Pressable style={[styles.pressableView, isSelected(item) && styles.selectedPressable]} onPress={() => onPressCategory(item)}>
                     {isSelected(item) && <CheckboxMainIcon style={styles.checkboxMain} />}
-                    <FastImage style={styles.image} source={{uri: item.imgUrl}}></FastImage>
+                    <FastImage style={styles.image} source={{uri: item.imageUrl}}></FastImage>
                   </Pressable>
-                  <Text style={styles.starName}>{item.nickName}</Text>
+                  <Text style={styles.starName}>{item.name}</Text>
                 </View>
               )}></FlatList>
           )}
@@ -291,7 +266,7 @@ export const SelectCategory = () => {
       </View>
       <FloatingBottomButton
         label="선택 완료"
-        enabled={userSelectedCategories.length != 0 && signUpSuccess == false && postSignUpQuery.isLoading == false}
+        enabled={userSelectedCategories.length != 0 && signUpSuccess == false && signUpQuery.isLoading == false}
         onPress={onPressSignUp}
       />
     </SafeAreaView>
@@ -299,6 +274,12 @@ export const SelectCategory = () => {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -48,
+  },
   selectedCategoryButton: {
     backgroundColor: theme.gray50,
     paddingVertical: 6,

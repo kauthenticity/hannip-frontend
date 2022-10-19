@@ -648,18 +648,35 @@ export type IAccountDto = {
   creatorIdDatetime: string
 }
 
+// export type ICategoryDto = {
+//   job: '가수' | '배우'
+//   nickName: string
+//   birth: string // format : "1995-03-21 12:43:15"
+//   imgUrl: string | undefined
+//   email: string
+//   categoryIdx: number
+// }
+
+// category list get할 때 categoryListResponses.content의 Typ
 export type ICategoryDto = {
-  job: '가수' | '배우'
-  nickName: string
-  birth: string // format : "1995-03-21 12:43:15"
-  imgUrl: string | undefined
-  email: string
-  categoryIdx: number
+  birth: string
+  categoryId: number
+  categoryType: 'actor' | 'singer'
+  imageUrl: string
+  name: string
 }
 
 export type IUpdateCategoryDto = {
   accountIdx: number
   accountCategoryDto: IAccountCategoryDto[]
+}
+
+export type ICategoryGetDto = {
+  page?: number
+  size?: number
+  sort?: 'id' | 'desc' | 'asc'
+  keyword?: string
+  categoryType: 'actor' | 'singer'
 }
 
 // *************** 마이페이지 ***************
@@ -731,4 +748,15 @@ export type IcancelDto = {
   accountIdx: number
   nanumDeleteReason: string
   nanumIdx: number
+}
+
+// ************** new api **************
+
+export type ISignUpRequestDto = {
+  categoryDtoList: {
+    categoryId: number
+  }[]
+  email: string
+  nickname: string
+  url: string
 }
