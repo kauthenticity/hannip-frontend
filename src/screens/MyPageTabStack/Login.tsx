@@ -1,24 +1,26 @@
-import React from 'react'
+import React, {useCallback} from 'react'
 import {View, Text, Pressable, StyleSheet, Platform} from 'react-native'
 import FastImage from 'react-native-fast-image'
 import {useNavigation} from '@react-navigation/native'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import {useDispatch} from 'react-redux'
-import {StackHeader, BellIcon} from '../../components/utils'
 import {GoogleSignin} from '@react-native-google-signin/google-signin'
 import auth from '@react-native-firebase/auth'
 import {KakaoOAuthToken, KakaoProfile, getProfile as getKakaoProfile, login} from '@react-native-seoul/kakao-login'
 import {useMutation} from 'react-query'
-import {queryKeys, getAccountInfoByIdx, getAccountInfoByEmail} from '../../api'
+import axios from 'axios'
+import {queryKeys, getAccountInfoByIdx, getAccountInfoByEmail, kakaoOauth} from '../../api'
 
-import {login as ReduxLogin} from '../../redux/slices/auth'
+import {login as ReduxLogin, storeAccessToken} from '../../redux/slices/auth'
 import * as theme from '../../theme'
 import {showMessage} from 'react-native-flash-message'
 import appleAuth, {AppleRequestResponse} from '@invertase/react-native-apple-authentication'
 import {storeString, useAppDispatch, getString} from '../../hooks'
+import {StackHeader, BellIcon} from '../../components/utils'
 
 const ios = Platform.OS == 'ios'
 
+const ACCESS_TOKEN =
+  'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNjYzNjYyMDI1LCJleHAiOjE2NjQ4NzE2MjV9.dxNwUn0nNjw9NiLPYN31HBOCWkGzYugTXj5UwGFXNcQ3k0s_PoSBaZsjmSBqKJcwMkG0E3dstBRdnfHySRVWIQ'
 type LoginButtonProps = {
   label: string
   source: object
@@ -40,36 +42,70 @@ export const Login = () => {
   const navigation = useNavigation()
   const dispatch = useAppDispatch()
 
+  // const signInWithKakao = async (): Promise<void> => {
+  //   //console.log('clicked')
+  //   try {
+  //     const token: KakaoOAuthToken = await login()
+  //     // @ts-ignore
+  //     const profile: KakaoProfile = await getKakaoProfile()
+
+  //     // 해당 이메일로 가입된 회원인지 확인
+  //     getAccountInfoByEmail(profile.email)
+  //       .then(res => {
+  //         console.log(res)
+
+  //         storeString('accountIdx', res.accountIdx.toString())
+  //         storeString('email', res.email)
+
+  //         dispatch(ReduxLogin(res))
+  //         dispatch(storeAccessToken(ACCESS_TOKEN))
+  //         axios.defaults.headers.common['Authorization'] = `Bearer ${ACCESS_TOKEN}`
+
+  //         navigation.navigate('MainTabNavigator', {
+  //           screen: 'NanumList',
+  //         })
+  //       })
+  //       .catch(err => {
+  //         // 해당 이메일이 없는 경우 회원 가입 페이지로 이동
+  //         if (err.response.status == 500) {
+  //           navigation.navigate('LoginStackNavigator', {
+  //             screen: 'SetProfile',
+  //             params: {
+  //               email: profile.email,
+  //             },
+  //           })
+  //         }
+  //       })
+  //   } catch (err) {
+  //     console.log(err)
+  //     showMessage({
+  //       message: '카카오 로그인 중 에러가 발생했습니다',
+  //       type: 'info',
+  //       animationDuration: 300,
+  //       duration: 1350,
+  //       style: {
+  //         backgroundColor: 'rgba(36, 36, 36, 0.9)',
+  //       },
+  //       titleStyle: {
+  //         fontFamily: 'Pretendard-Medium',
+  //       },
+  //       floating: true,
+  //     })
+  //   }
+  // }
   const signInWithKakao = async (): Promise<void> => {
-    //console.log('clicked')
     try {
       const token: KakaoOAuthToken = await login()
+      // @ts-ignore
       const profile: KakaoProfile = await getKakaoProfile()
 
-      // 해당 이메일로 가입된 회원인지 확인
-      getAccountInfoByEmail(profile.email)
-        .then(res => {
-          console.log(res)
-
-          storeString('accountIdx', res.accountIdx.toString())
-          storeString('email', res.email)
-
-          dispatch(ReduxLogin(res))
-          navigation.navigate('MainTabNavigator', {
-            screen: 'NanumList',
-          })
-        })
-        .catch(err => {
-          // 해당 이메일이 없는 경우 회원 가입 페이지로 이동
-          if (err.response.status == 500) {
-            navigation.navigate('LoginStackNavigator', {
-              screen: 'SetProfile',
-              params: {
-                email: profile.email,
-              },
-            })
-          }
-        })
+      // 카카오 로그인 후에 회원 가입 페이지로 이동
+      navigation.navigate('LoginStackNavigator', {
+        screen: 'SetProfile',
+        params: {
+          email: profile.email,
+        },
+      })
     } catch (err) {
       console.log(err)
       showMessage({

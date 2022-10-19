@@ -21,6 +21,3 @@ export * from './reviewService'
 export * from './calendarService'
 export * from './blockService'
 export * from './oauthSerice'
-
-// new api
-export * from './userService'

@@ -1,5 +1,5 @@
 import React, {useState, useCallback, useEffect} from 'react'
-import {View, Text, ScrollView, FlatList, Pressable, StyleSheet, ActivityIndicator, Alert, Platform, RefreshControl} from 'react-native'
+import {View, Text, ScrollView, FlatList, StatusBar, Pressable, StyleSheet, ActivityIndicator, Alert, Platform, RefreshControl} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import {useNavigation} from '@react-navigation/native'
 import {useQueryClient, useQuery} from 'react-query'
@@ -148,6 +148,8 @@ const NanumList = () => {
 
   return (
     <SafeAreaView style={[styles.container]} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="default" translucent={true} />
+
       <View style={styles.headerContainer}>
         {isLoggedIn ? (
           <Pressable style={[styles.titleContainer]} onPress={onPressSelectCategory}>

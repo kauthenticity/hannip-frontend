@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>카메라에 접근하도록 허용 버튼을 눌러주세요. 프로필 사진, 상품 사진을 설정할 수 있어요.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>카메라에 접근하도록 허용 버튼을 눌러주세요. 프로필 사진, 상품 사진을 설정할 수 있어요.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -57,6 +53,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>CodePushDeploymentKey</key>
+	<string>${CODEPUSH_KEY}</string>
 	<key>KAKAO_APP_KEY</key>
 	<string>f2e70f2fa6b42f1af84ee7a0850f3cd6</string>
 	<key>LSApplicationCategoryType</key>
@@ -73,6 +71,11 @@
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
+			<key>ec2-3-35-50-197.ap-northeast-2.compute.amazonaws.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
 			<key>gloryalb-env.ap-northeast-2.elasticbeanstalk.com</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
@@ -85,8 +88,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>카메라에 접근하도록 허용 버튼을 눌러주세요. 프로필 사진, 상품 사진을 설정할 수 있어요.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>카메라에 접근하도록 허용 버튼을 눌러주세요. 프로필 사진, 상품 사진을 설정할 수 있어요.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Pretendard-Black.otf</string>
@@ -129,7 +136,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-  <key>CodePushDeploymentKey</key>
-<string>${CODEPUSH_KEY}</string>
 </dict>
 </plist>

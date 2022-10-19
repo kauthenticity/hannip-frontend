@@ -9,7 +9,7 @@ const apiImageClient = axios.create({
 })
 
 export const uploadProfileImage = async (formData: FormData) => {
-  const {data} = await apiImageClient.post('/api/mypage/profile', formData)
+  const {data} = await apiImageClient.post('/api/img/profile', formData)
 
   return data
 }

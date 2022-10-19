@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react'
-import {View, Text, StyleSheet, Alert, Linking, Platform} from 'react-native'
+import {View, Text, StyleSheet, StatusBar, Linking, Platform} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {useMutation} from 'react-query'
 import {URLSearchParams} from 'react-native-url-polyfill'
 import KeyboardManager from 'react-native-keyboard-manager'
 import LinearGradient from 'react-native-linear-gradient'
+import axios from 'axios'
 
 import * as theme from '../../theme'
 import {getString, removeString} from '../../hooks'
@@ -66,51 +67,68 @@ export const SplashScreen = () => {
     },
   })
 
+  //   useEffect(() => {
+  //     // async storage에서 account Idx가져오기
+  //     getString('accountIdx').then(accountIdx => {
+  //       if (accountIdx == '' || accountIdx == undefined || accountIdx == null || accountIdx == 'null') {
+  //         // 저장된 accountIdx가 없으면 메인 페이지로 이동
+  //         navigation.navigate('MainTabNavigator')
+  //       } else {
+  //         getString('accessToken').then(accessToken => {
+  //           //if (accessToken == '' || accessToken == undefined || accessToken == null || accessToken == 'null') {
+  //           //  // access token이 없으면 메인 페이지로 이동
+  //           //  navigation.navigate('MainTabNavigator')
+  //           //} else {
+  //           //dispatch(storeAccessToken(accessToken!)) // redux에 accesss
+  //           // accessToken으로 id, email, 카테고리 저장
+  //           getAccountInfoQuery.mutate(parseInt(accountIdx))
+  //           dispatch(storeAccessToken('1111'))
+  //           //storeAccessToken(accessToken!)
+  //           // qna list 받아오기
+  //           //}
+  //         })
+  //       }
+  //     })
+
+  //     // ************************* Deep Link *************************x
+  //     //IOS && ANDROID : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때
+  //     Linking.getInitialURL().then(url => {
+  //       console.log('url1 : ', url)
+  //       const searchParams = new URLSearchParams(url!)
+  //       const idx = searchParams.get('idx')
+  //       console.log(url)
+  //       deepLink(idx!)
+  //       return () => removeListener
+  //     })
+
+  //     //IOS : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때 && 앱이 실행 중일 때
+  //     //ANDROID : 앱이 실행 중일 때
+  //     Linking.addEventListener('url', url => {
+  //       //console.log('url2 : ', url)
+  //       const searchParams = new URLSearchParams(url!)
+  //       const idx = searchParams.get('idx')
+  //       addListenerLink(idx!)
+  //       return () => removeListener
+  //     })
+  //   }, [])
+
   useEffect(() => {
-    // async storage에서 account Idx가져오기
-    getString('accountIdx').then(accountIdx => {
-      if (accountIdx == '' || accountIdx == undefined || accountIdx == null || accountIdx == 'null') {
-        // 저장된 accountIdx가 없으면 메인 페이지로 이동
+    // async storage에서 access token을 가져온다.
+    getString('accesssToken').then(accessToken => {
+      // access token이 없으면 main tab navigator로 이동
+      if (accessToken == null || accessToken == undefined) {
         navigation.navigate('MainTabNavigator')
-      } else {
-        getString('accessToken').then(accessToken => {
-          //if (accessToken == '' || accessToken == undefined || accessToken == null || accessToken == 'null') {
-          //  // access token이 없으면 메인 페이지로 이동
-          //  navigation.navigate('MainTabNavigator')
-          //} else {
-          //dispatch(storeAccessToken(accessToken!)) // redux에 accesss
-          // accessToken으로 id, email, 카테고리 저장
-          getAccountInfoQuery.mutate(parseInt(accountIdx))
-          dispatch(storeAccessToken('1111'))
-          //storeAccessToken(accessToken!)
-          // qna list 받아오기
-          //}
-        })
+      }
+      // access token이 있으면 apiClient에 저장.
+      else {
+        // axios에 default header로 access token을 넣어줌.
+        // post할때만 넣어줌 ....
+        axios.defaults.headers.post['Authorization'] = `Bearer ${accessToken}`
+
+        // 로그인 시키는 로직 추가해야 함
       }
     })
-
-    // ************************* Deep Link *************************x
-    //IOS && ANDROID : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때
-    Linking.getInitialURL().then(url => {
-      console.log('url1 : ', url)
-      const searchParams = new URLSearchParams(url!)
-      const idx = searchParams.get('idx')
-      console.log(url)
-      deepLink(idx!)
-      return () => removeListener
-    })
-
-    //IOS : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때 && 앱이 실행 중일 때
-    //ANDROID : 앱이 실행 중일 때
-    Linking.addEventListener('url', url => {
-      //console.log('url2 : ', url)
-      const searchParams = new URLSearchParams(url!)
-      const idx = searchParams.get('idx')
-      addListenerLink(idx!)
-      return () => removeListener
-    })
   }, [])
-
   const deepLink = (idx: string) => {
     if (idx) {
       console.log('idx ini deepLink : ', idx)
@@ -134,14 +152,18 @@ export const SplashScreen = () => {
   }
 
   return (
-    <LinearGradient
-      start={{x: 1, y: 0}}
-      end={{x: 0, y: 1}}
-      colors={['rgba(141, 91, 255, 1)', 'rgba(255, 173, 193, 1)', 'rgba(255, 255, 255,1)']}
-      style={styles.container}>
-      <LogoWhiteIcon size={82} />
-      <Text style={styles.logoText}>Hannip</Text>
-    </LinearGradient>
+    <>
+      <StatusBar barStyle="default" translucent={true} />
+
+      <LinearGradient
+        start={{x: 1, y: 0}}
+        end={{x: 0, y: 1}}
+        colors={['rgba(141, 91, 255, 1)', 'rgba(255, 173, 193, 1)', 'rgba(255, 255, 255,1)']}
+        style={styles.container}>
+        <LogoWhiteIcon size={82} />
+        <Text style={styles.logoText}>Hannip</Text>
+      </LinearGradient>
+    </>
   )
 }
 
