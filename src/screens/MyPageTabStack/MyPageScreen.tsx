@@ -5,12 +5,12 @@ import {SafeAreaView} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {useQueryClient, useQuery} from 'react-query'
 
-import {IAccountDto} from '../../types'
+import {IAccountDto, IUserDto} from '../../types'
 import {LogoutModal} from '../../components/MainTab'
 import {StackHeader, BellIcon, RightArrowIcon} from '../../components/utils'
 import {useAppSelector} from '../../hooks'
 import * as theme from '../../theme'
-import {queryKeys, getAccountInfoMypage} from '../../api'
+import {queryKeys, getUserInfo} from '../../api'
 import NoUserSvg from '../../assets/Icon/noUser.svg'
 
 type MyPageItem = {
@@ -43,18 +43,15 @@ export const MyPageScreen = () => {
   const navigation = useNavigation()
   const user = useAppSelector(state => state.auth.user)
   const queryClient = useQueryClient()
-  const [userInfo, setUserInfo] = useState<IAccountDto>()
-  const [applyNumber, setApplyNumber] = useState<number>(0)
-  const [nanumNumber, setNanumNumber] = useState<number>(0)
+  const [userInfo, setUserInfo] = useState<IUserDto>()
   const [refreshing, setRefreshing] = useState<boolean>(false)
 
-  useQuery(queryKeys.accountInfoMypage, () => getAccountInfoMypage(user.accountIdx), {
+  useQuery(queryKeys.accountInfoMypage, () => getUserInfo(), {
     onSuccess(data) {
-      console.log('reloaded')
+      delete data.password
+      delete data.userRole
       setRefreshing(false)
-      setUserInfo({...data.accountDto})
-      setApplyNumber(data.applyNumber)
-      setNanumNumber(data.nanumNumber)
+      setUserInfo(data)
     },
   })
 
@@ -117,16 +114,16 @@ export const MyPageScreen = () => {
       <LogoutModal logoutModalVisible={logoutModalVisible} setLogoutModalVisible={setLogoutModalVisible} />
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <View style={[theme.styles.rowFlexStart, styles.profileContainer]}>
-          {userInfo?.accountImg == undefined || userInfo?.accountImg == '' ? (
+          {userInfo?.profileUrl == undefined || userInfo?.profileUrl == '' ? (
             <View style={[styles.profileImage, styles.emptyProfileView]}>
               <NoUserSvg width={32} height={32} />
             </View>
           ) : (
-            <FastImage style={styles.profileImage} source={{uri: userInfo?.accountImg}}></FastImage>
+            <FastImage style={styles.profileImage} source={{uri: userInfo?.profileUrl}}></FastImage>
           )}
 
           <View style={{alignSelf: 'stretch', justifyContent: 'center'}}>
-            <Text style={[theme.styles.bold20, {color: theme.gray700, marginBottom: 8}]}>{userInfo?.creatorId}</Text>
+            <Text style={[theme.styles.bold20, {color: theme.gray700, marginBottom: 8}]}>{userInfo?.nickname}</Text>
 
             <Pressable style={[theme.styles.rowFlexStart]} onPress={onPressEditProfile}>
               <Text style={[{color: theme.gray500}, theme.styles.text14]}>프로필 수정</Text>
@@ -137,9 +134,9 @@ export const MyPageScreen = () => {
         <Separator />
         <View style={styles.wrapper}>
           <Text style={[theme.styles.bold16, {marginBottom: 8, marginTop: 16}]}>나눔 관리</Text>
-          <MyPageItem label="진행한 나눔" numSharing={nanumNumber} onPress={onPressHoldingSharing} />
+          <MyPageItem label="진행한 나눔" onPress={onPressHoldingSharing} />
           <SeparatorLight />
-          <MyPageItem label="참여한 나눔" numSharing={applyNumber} onPress={onPressParticipatingSharing} />
+          <MyPageItem label="참여한 나눔" onPress={onPressParticipatingSharing} />
         </View>
         <Separator />
         <View style={styles.wrapper}>
