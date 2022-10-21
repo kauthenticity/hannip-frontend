@@ -25,4 +25,15 @@ apiClient.interceptors.request.use(request => {
   return request
 })
 
+apiClient.interceptors.response.use(
+  response => {
+    return response
+  },
+  error => {
+    if (error.response?.status === 401) {
+      console.log('unauthorized')
+    }
+  },
+)
+
 export default apiClient

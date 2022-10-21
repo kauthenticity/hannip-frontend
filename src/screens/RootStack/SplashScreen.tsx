@@ -5,7 +5,6 @@ import {useMutation} from 'react-query'
 import {URLSearchParams} from 'react-native-url-polyfill'
 import KeyboardManager from 'react-native-keyboard-manager'
 import LinearGradient from 'react-native-linear-gradient'
-import axios from 'axios'
 
 import * as theme from '../../theme'
 import {getString, removeString, storeString} from '../../hooks'
@@ -38,36 +37,21 @@ export const SplashScreen = () => {
   const dispatch = useAppDispatch()
   const navigation = useNavigation()
 
-  // const getAccountInfoQuery = useMutation('init', getAccountInfoByIdx, {
-  //   onSuccess(data, variables, context) {
-  //     console.log('data :', data)
-  //     if (data == undefined) {
-  //       removeString('accountIdx')
-  //     } else {
-  //       dispatch(
-  //         login({
-  //           ...data,
-  //           holdingSharingCnt: 6,
-  //           participateSharingCnt: 7,
-  //         }),
-  //       )
-  //     }
+  const signInQuery = useMutation(queryKeys.accountInfo, signIn, {
+    onSuccess(data) {
+      // 토큰 리덕스에 저장
+      dispatch(storeToken(data.token))
+      storeString('token', data.token)
+      getUserInfoQuery.mutate()
+    },
+    onError(error) {
+      console.log('splash screen에서 signin 중 에러가 발생했습니다.')
+      console.log(error)
+    },
+  })
 
-  //     navigation.navigate('MainTabNavigator')
-  //   },
-  //   onError(error, variables, context) {
-  //     // 해당 accountIdx 없음
-  //     // 예를 들어 아이폰, 아이패드 둘 다 에서 사용하는데 아이패드에서 탈퇴하고 아이폰에서 앱을 킨 경우
-  //     if (error.response.status == 500) {
-  //       console.log('here')
-  //       removeString('accountIdx').then(res => {
-  //         navigation.navigate('MainTabNavigator')
-  //       })
-  //     }
-  //   },
-  // })
   const getUserInfoQuery = useMutation(queryKeys.accountInfo, getUserInfo, {
-    onSuccess(data, variables, context) {
+    onSuccess(data) {
       delete data.password
       delete data.userRole
       dispatch(login(data))
@@ -76,51 +60,6 @@ export const SplashScreen = () => {
       navigation.navigate('MainTabNavigator')
     },
   })
-
-  //   useEffect(() => {
-  //     // async storage에서 account Idx가져오기
-  //     getString('accountIdx').then(accountIdx => {
-  //       if (accountIdx == '' || accountIdx == undefined || accountIdx == null || accountIdx == 'null') {
-  //         // 저장된 accountIdx가 없으면 메인 페이지로 이동
-  //         navigation.navigate('MainTabNavigator')
-  //       } else {
-  //         getString('accessToken').then(accessToken => {
-  //           //if (accessToken == '' || accessToken == undefined || accessToken == null || accessToken == 'null') {
-  //           //  // access token이 없으면 메인 페이지로 이동
-  //           //  navigation.navigate('MainTabNavigator')
-  //           //} else {
-  //           //dispatch(storeAccessToken(accessToken!)) // redux에 accesss
-  //           // accessToken으로 id, email, 카테고리 저장
-  //           getAccountInfoQuery.mutate(parseInt(accountIdx))
-  //           dispatch(storeAccessToken('1111'))
-  //           //storeAccessToken(accessToken!)
-  //           // qna list 받아오기
-  //           //}
-  //         })
-  //       }
-  //     })
-
-  //     // ************************* Deep Link *************************x
-  //     //IOS && ANDROID : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때
-  //     Linking.getInitialURL().then(url => {
-  //       console.log('url1 : ', url)
-  //       const searchParams = new URLSearchParams(url!)
-  //       const idx = searchParams.get('idx')
-  //       console.log(url)
-  //       deepLink(idx!)
-  //       return () => removeListener
-  //     })
-
-  //     //IOS : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때 && 앱이 실행 중일 때
-  //     //ANDROID : 앱이 실행 중일 때
-  //     Linking.addEventListener('url', url => {
-  //       //console.log('url2 : ', url)
-  //       const searchParams = new URLSearchParams(url!)
-  //       const idx = searchParams.get('idx')
-  //       addListenerLink(idx!)
-  //       return () => removeListener
-  //     })
-  //   }, [])
 
   useEffect(() => {
     // async storage에서 access token을 가져온다.
@@ -131,10 +70,39 @@ export const SplashScreen = () => {
       }
       // access token이 있으면 apiClient에 저장.
       else {
-        dispatch(storeToken(token))
-        getUserInfoQuery.mutate()
-        // 로그인 시키는 로직 추가해야 함
+        // async storage에서 email을 가져옴
+        getString('email').then(email => {
+          // email이 없으면 그냥 메인으로 이동
+          if (email == null || email == undefined || email == '') {
+            navigation.navigate('MainTabNavigator')
+          }
+          // email이 있으면 로그인 시킴
+          else {
+            signInQuery.mutate(email)
+          }
+        })
       }
+    })
+
+    // ************************* Deep Link *************************x
+    //IOS && ANDROID : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때
+    Linking.getInitialURL().then(url => {
+      console.log('url1 : ', url)
+      const searchParams = new URLSearchParams(url!)
+      const idx = searchParams.get('idx')
+      console.log(url)
+      deepLink(idx!)
+      return () => removeListener
+    })
+
+    //IOS : 앱이 딥링크로 처음 실행될때, 앱이 열려있지 않을 때 && 앱이 실행 중일 때
+    //ANDROID : 앱이 실행 중일 때
+    Linking.addEventListener('url', url => {
+      //console.log('url2 : ', url)
+      const searchParams = new URLSearchParams(url!)
+      const idx = searchParams.get('idx')
+      addListenerLink(idx!)
+      return () => removeListener
     })
   }, [])
   const deepLink = (idx: string) => {
