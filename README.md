@@ -1,5 +1,6 @@
 # 덕질을 위한 굿즈 나눔 플랫폼 한입
 
+## 서비스 소개
 <div style="display:flex;">
 <image src="https://velog.velcdn.com/images/kauthenticity/post/6f49d54e-4212-442e-a266-ae95b8382efc/image.png" width="200px;"/>
 <image src="https://velog.velcdn.com/images/kauthenticity/post/7441fa97-6471-4d24-8ad8-72641825d90b/image.png" width="200px;" /> 
