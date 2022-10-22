@@ -21,5 +21,7 @@
 
 ## More About
 [Notion 링크](https://www.notion.so/678cca0c533148e29ab77fd67c1263ad)
+<br />
 [Android 앱 링크](https://play.google.com/store/apps/details?id=com.hannib)
+<br />
 [IOS 앱  링크](https://apps.apple.com/kr/app/한입-hannip/id1635377027)
