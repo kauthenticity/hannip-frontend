@@ -124,7 +124,7 @@ export const EditCategory = () => {
 
   const isSelected = useCallback(
     (category: ICategoryDto) => {
-      return userSelectedCategories.filter(item => item.job == category.job && item.categoryName == category.nickName).length == 0 ? false : true
+      return userSelectedCategories.filter(item => item.categoryId == category.categoryId).length == 0 ? false : true
     },
     [userSelectedCategories],
   )

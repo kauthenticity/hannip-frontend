@@ -42,31 +42,36 @@ export const EditProfile = () => {
   })
   const leftChangeNum = useMemo(() => {
     if (data == undefined) return
-    console.log('user ; ', user)
-    const thisMonth = moment().format('YYYY.MM')
-    const lastMonthChanged = data.createDate.slice(0, 7)
+    const thisMonth = moment().format('YYYY-MM')
 
-    return thisMonth == lastMonthChanged ? 0 : 1
+    // 계정이 만들어지고 한번도 바꾼 적 없으면
+    if (data.updateDate == data.createDate) {
+      return 1
+    }
+
+    const updateDate = data.updateDate.slice(0, 7)
+    console.log(thisMonth, updateDate)
+    return thisMonth == updateDate ? 0 : 1
   }, [data])
 
   const editNicknameQuery = useMutation(queryKeys.accountInfo, editNickname, {
     onSuccess(data, variables, context) {
-      // queryClient.invalidateQueries(queryKeys.accountInfoMypage)
-      // queryClient.invalidateQueries(queryKeys.accountInfo)
+      queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+      queryClient.invalidateQueries(queryKeys.accountInfo)
 
-      // navigation.goBack()
+      navigation.goBack()
       console.log('닉네임 수정 성공')
     },
     onError(error, variables, context) {
-      // queryClient.invalidateQueries(queryKeys.accountInfoMypage)
-      // queryClient.invalidateQueries(queryKeys.accountInfo)
+      queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+      queryClient.invalidateQueries(queryKeys.accountInfo)
 
-      // navigation.goBack()
+      navigation.goBack()
       console.log('닉네임 수정 실패')
     },
   })
 
-  const editProfileImageQuery = useMutation(queryKeys.profileImage, uploadProfileImage, {
+  const editProfileImageQuery = useMutation(queryKeys.profileImage, editProfile, {
     onSuccess: data => {
       console.log('response : ', data)
       setProfileImage(data)
@@ -247,7 +252,7 @@ export const EditProfile = () => {
         return
       }
       let formData = new FormData()
-      formData.append('nanumeImage', {
+      formData.append('nanumImage', {
         uri: response.assets[0].uri,
         type: 'multipart/form-data',
         name: 'image.jpg',
