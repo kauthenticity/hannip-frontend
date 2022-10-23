@@ -10,12 +10,11 @@ import {showMessage} from 'react-native-flash-message'
 import Modal from 'react-native-modal'
 
 import {StackHeader, SelectImageIcon} from '../../components/utils'
-import {queryKeys, uploadProfileImage, updateAccountInfo, getAccountInfoByIdx, checkNicknameDuplicated} from '../../api'
-import {updateName, updateProfileImage} from '../../redux/slices'
+import {queryKeys, uploadProfileImage, updateAccountInfo, getAccountInfoByIdx, checkNicknameDuplicated, getUserInfo, editNickname, editProfile} from '../../api'
 import {useAppSelector, useAppDispatch} from '../../hooks'
 import * as theme from '../../theme'
 import NoUserSvg from '../../assets/Icon/noUser.svg'
-import {IAccountDto} from '../../types'
+import {IAccountDto, IUserDto} from '../../types'
 
 const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/
 
@@ -26,11 +25,12 @@ export const EditProfile = () => {
   const dispatch = useAppDispatch()
   const user = useAppSelector(state => state.auth.user)
 
-  const {data} = useQuery(queryKeys.accountInfo, () => getAccountInfoByIdx(user.accountIdx), {
-    onSuccess: (data: IAccountDto) => {
-      setName(data.creatorId)
-      if (data.accountImg != null && data.accountImg != undefined) {
-        setProfileImage(data.accountImg)
+  // 초기 사용자 정보 가져오기
+  const {data} = useQuery(queryKeys.accountInfo, getUserInfo, {
+    onSuccess: (data: IUserDto) => {
+      setName(data.nickname)
+      if (data.profileUrl != null && data.profileUrl != undefined) {
+        setProfileImage(data.profileUrl)
       } else {
         setProfileImage('')
       }
@@ -42,53 +42,31 @@ export const EditProfile = () => {
   })
   const leftChangeNum = useMemo(() => {
     if (data == undefined) return
-    // 처음에 회원 가입을 하면(회원 정보를 한번도 수정한 적 없으면) creatorIdDatetime == null
-    if (data.creatorIdDatetime == null || data.creatorIdDatetime == undefined) {
-      return 1
-    }
     console.log('user ; ', user)
     const thisMonth = moment().format('YYYY.MM')
-    const lastMonthChanged = data.creatorIdDatetime.slice(0, 7)
+    const lastMonthChanged = data.createDate.slice(0, 7)
 
     return thisMonth == lastMonthChanged ? 0 : 1
   }, [data])
 
-  const updateAccountInfoQuery = useMutation(queryKeys.accountInfo, updateAccountInfo, {
+  const editNicknameQuery = useMutation(queryKeys.accountInfo, editNickname, {
     onSuccess(data, variables, context) {
-      queryClient.invalidateQueries(queryKeys.accountInfoMypage)
-      queryClient.invalidateQueries(queryKeys.accountInfo)
+      // queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+      // queryClient.invalidateQueries(queryKeys.accountInfo)
 
-      dispatch(updateName(name))
-      if (profileImage != undefined) {
-        dispatch(updateProfileImage(profileImage))
-      }
-      navigation.goBack()
+      // navigation.goBack()
+      console.log('닉네임 수정 성공')
     },
     onError(error, variables, context) {
-      //   showMessage({
-      //     message: '회원 정보 업데이트 중 에러가 발생했습니다',
-      //     type: 'info',
-      //     animationDuration: 300,
-      //     duration: 1350,
-      //     style: {
-      //       backgroundColor: 'rgba(36, 36, 36, 0.9)',
-      //     },
-      //     titleStyle: {
-      //       fontFamily: 'Pretendard-Medium',
-      //     },
-      //     floating: true,
-      //   })
-      queryClient.invalidateQueries(queryKeys.accountInfoMypage)
-      queryClient.invalidateQueries(queryKeys.accountInfo)
+      // queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+      // queryClient.invalidateQueries(queryKeys.accountInfo)
 
-      dispatch(updateName(name))
-      if (profileImage != undefined) {
-        dispatch(updateProfileImage(profileImage))
-      }
-      navigation.goBack()
+      // navigation.goBack()
+      console.log('닉네임 수정 실패')
     },
   })
-  const uploadProfileImageQuery = useMutation(queryKeys.profileImage, uploadProfileImage, {
+
+  const editProfileImageQuery = useMutation(queryKeys.profileImage, uploadProfileImage, {
     onSuccess: data => {
       console.log('response : ', data)
       setProfileImage(data)
@@ -111,6 +89,51 @@ export const EditProfile = () => {
       })
     },
   })
+  // const updateAccountInfoQuery = useMutation(queryKeys.accountInfo, updateAccountInfo, {
+  //   onSuccess(data, variables, context) {
+  //     queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+  //     queryClient.invalidateQueries(queryKeys.accountInfo)
+
+  //     dispatch(updateName(name))
+  //     if (profileImage != undefined) {
+  //       dispatch(updateProfileImage(profileImage))
+  //     }
+  //     navigation.goBack()
+  //   },
+  //   onError(error, variables, context) {
+  //     queryClient.invalidateQueries(queryKeys.accountInfoMypage)
+  //     queryClient.invalidateQueries(queryKeys.accountInfo)
+
+  //     dispatch(updateName(name))
+  //     if (profileImage != undefined) {
+  //       dispatch(updateProfileImage(profileImage))
+  //     }
+  //     navigation.goBack()
+  //   },
+  // })
+  // const uploadProfileImageQuery = useMutation(queryKeys.profileImage, uploadProfileImage, {
+  //   onSuccess: data => {
+  //     console.log('response : ', data)
+  //     setProfileImage(data)
+  //   },
+  //   onError(error, variables, context) {
+  //     console.log(error)
+
+  //     showMessage({
+  //       message: '프로필 이미지 업로드 중 에러가 발생했습니다',
+  //       type: 'info',
+  //       animationDuration: 300,
+  //       duration: 1350,
+  //       style: {
+  //         backgroundColor: 'rgba(36, 36, 36, 0.9)',
+  //       },
+  //       titleStyle: {
+  //         fontFamily: 'Pretendard-Medium',
+  //       },
+  //       floating: true,
+  //     })
+  //   },
+  // })
 
   // ******************** states ********************
 
@@ -123,7 +146,7 @@ export const EditProfile = () => {
   // ******************** callbacks ********************
   const checkButtonEnabled = useCallback((name: string, profileImage: string | undefined) => {
     // 이름도, profile image도 바뀐 게 없다면
-    return name == user.creatorId && profileImage == user.accountImg ? false : true
+    return name == user.nickname && profileImage == user.profileUrl ? false : true
   }, [])
 
   const onPressComplete = useCallback(async () => {
@@ -174,72 +197,10 @@ export const EditProfile = () => {
 
     // 닉네임을 바꿀 수 있을 땐 닉네임 중복 검사
     if (leftChangeNum == 1) {
-      if (name != user.creatorId) {
-        checkNicknameDuplicated(name)
-          .then(res => {
-            console.log('res: ', res)
-            // 중복된 닉네임이 없는 경우
-            if (res == '') {
-              if (name && profileImage) {
-                let accountDto: IAccountDto = {
-                  accountIdx: user.accountIdx,
-                  creatorId: name,
-                  accountCategoryDtoList: user.accountCategoryDtoList,
-                  accountImg: profileImage,
-                  email: user.email,
-                  creatorIdDatetime: '',
-                }
-
-                updateAccountInfoQuery.mutate(accountDto)
-              }
-            } else {
-              setDuplicated(true)
-            }
-          })
-          .catch(err => {
-            if (err.response.status == 500) {
-              setDuplicated(true)
-            }
-          })
-      } else {
-        console.log('here')
-        if (name && profileImage) {
-          let accountDto: IAccountDto = {
-            accountIdx: user.accountIdx,
-            creatorId: name,
-            accountCategoryDtoList: user.accountCategoryDtoList.map(item => {
-              return {
-                ...item,
-                accountIdx: user.accountIdx,
-              }
-            }),
-            accountImg: profileImage,
-            email: user.email,
-            creatorIdDatetime: '',
-          }
-
-          console.log(JSON.stringify(accountDto))
-
-          updateAccountInfoQuery.mutate(accountDto)
-        }
-      }
+      editNicknameQuery.mutate(name)
     }
     // 프사만 바꿀 땐 중복 검사 없이 바로 업데이트
     else {
-      if (name) {
-        let accountDto: IAccountDto = {
-          accountIdx: user.accountIdx,
-          creatorId: name,
-          accountCategoryDtoList: user.accountCategoryDtoList,
-          accountImg: profileImage == undefined ? '' : profileImage,
-          email: user.email,
-          creatorIdDatetime: '',
-        }
-
-        console.log(JSON.stringify(accountDto))
-
-        updateAccountInfoQuery.mutate(accountDto)
-      }
     }
   }, [name, profileImage])
 
@@ -286,12 +247,12 @@ export const EditProfile = () => {
         return
       }
       let formData = new FormData()
-      formData.append('profileImg', {
+      formData.append('nanumeImage', {
         uri: response.assets[0].uri,
         type: 'multipart/form-data',
         name: 'image.jpg',
       })
-      uploadProfileImageQuery.mutate(formData) // s3에 이미지 저장
+      editProfileImageQuery.mutate(formData) // s3에 이미지 저장
     }
   }, [])
 
@@ -323,7 +284,7 @@ export const EditProfile = () => {
   return (
     <SafeAreaView style={theme.styles.safeareaview}>
       <StackHeader goBack title="프로필 수정">
-        {updateAccountInfoQuery.isLoading ? (
+        {editNicknameQuery.isLoading || editProfileImageQuery.isLoading ? (
           <ActivityIndicator />
         ) : (
           <Pressable onPress={onPressComplete}>
@@ -346,7 +307,7 @@ export const EditProfile = () => {
                 onLoadEnd={() => {
                   setIsLoading(false)
                 }}>
-                <ActivityIndicator animating={uploadProfileImageQuery.isLoading || isLoading == true} />
+                <ActivityIndicator animating={editProfileImageQuery.isLoading || isLoading == true} />
               </FastImage>
             </Pressable>
           )}
@@ -361,7 +322,7 @@ export const EditProfile = () => {
         <Text style={theme.styles.label}>닉네임</Text>
         <TextInput
           style={[theme.styles.input, leftChangeNum == 0 && {color: theme.gray500}]}
-          placeholder={user.creatorId}
+          placeholder={user.nickname}
           placeholderTextColor={theme.gray300}
           value={name}
           onChangeText={text => {

@@ -8,7 +8,7 @@ import 'moment/locale/ko'
 import * as theme from '../../theme'
 import {DownArrowIcon, BellIcon, MagnifierIcon, BottomSheet, FloatingButtonIcon, EmptyIcon} from '../../components/utils'
 import {NanumListFilterTab, NanumListItem, GoodsListBottomSheetContent, Banner, CategoryDropdown} from '../../components/MainTab'
-import {INanumMethod, INanumListItem, IAccountCategoryDto, INanum} from '../../types'
+import {INanumMethod, INanumListItem, IAccountCategoryDto, IUserCategoryDto} from '../../types'
 import {useAppSelector} from '../../hooks'
 import {getNanumByRecent, getNanumByPopularity, getNanumAllByFavorites, queryKeys, getNanumAllByRecent} from '../../api'
 import moment from 'moment'
@@ -22,7 +22,7 @@ const NanumList = () => {
   const navigation = useNavigation()
   const user = useAppSelector(state => state.auth.user)
   console.log('user:', user)
-  //const currentCategory = user.accountCategoryDtoList[0]
+  const currentCategory = user.userCategoryDtoList[0]
   const queryClient = useQueryClient()
 
   // ******************** states ********************
@@ -32,20 +32,15 @@ const NanumList = () => {
   const [itemFilter, setItemFilter] = useState<'최신순' | '인기순' | '추천순'>('최신순') // 필터2 : 전체, 우편, 오프라인
   const [showItemFilterBottomShet, setShowItemFilterBottomSheet] = useState<boolean>(false) // 인기순, 최신순, 추천순 필터링 bottom sheet 띄울지
   const [showSelectCategoryModal, setShowSelectCategoryModal] = useState<boolean>(false) // 카테고리 선택하는 드롭다운 띄울지
-  const [userCategory, setUserCategory] = useState<IAccountCategoryDto>({
-    job: '가수',
-    categoryName: '전체보기',
-    accountIdx: 0,
-    categoryIdx: 0,
-  }) // 현재 사용자가 선택한 카테고리.
+  const [userCategory, setUserCategory] = useState<IUserCategoryDto>(currentCategory) // 현재 사용자가 선택한 카테고리.
   const [bannerInfo, setBannerInfo] = useState({
     imageUri: '',
     title: '',
     nanumIdx: 0,
   })
-  // useEffect(() => {
-  //   setUserCategory(currentCategory)
-  // }, [currentCategory])
+  useEffect(() => {
+    setUserCategory(currentCategory)
+  }, [currentCategory])
 
   // ******************** react query ********************
   // 카테고리가 설정되지 않았을 때 (로그인하지 않았을 때) 전부 불러오기
@@ -167,13 +162,13 @@ const NanumList = () => {
         </View>
       </View>
 
-      {/* <CategoryDropdown
+      <CategoryDropdown
         showCategoryModal={showSelectCategoryModal}
         setShowCategoryModal={setShowSelectCategoryModal}
         userCategory={userCategory}
         setUserCategory={setUserCategory}
-        categories={user.accountCategoryDtoList}
-      /> */}
+        categories={user.userCategoryDtoList}
+      />
 
       <View style={{flex: 1}}>
         <Banner imageUri={bannerInfo.imageUri} title={bannerInfo.title} nanumIdx={bannerInfo.nanumIdx} />

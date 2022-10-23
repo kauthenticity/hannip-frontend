@@ -5,9 +5,6 @@ import {token} from '../redux/slices'
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 let store: any
@@ -18,6 +15,7 @@ export const injectStore = (_store: any) => {
 
 apiClient.interceptors.request.use(request => {
   const token = store.getState().auth.token
+  console.log('token : ', token)
 
   if (token != null && token != '' && token != undefined) {
     request.headers!.Authorization = `Bearer ${token}`

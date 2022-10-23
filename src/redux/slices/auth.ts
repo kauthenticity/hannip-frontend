@@ -1,6 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {createDraftSafeSelector} from '@reduxjs/toolkit'
-import {IAccountCategoryDto, IAccountDto, IUserDto} from '../../types'
+import {IAccountCategoryDto, IAccountDto, IUserDto, IUserCategoryDto} from '../../types'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 //Each slice file should define a type for its initial state value,
@@ -28,24 +28,6 @@ export interface Auth {
 const initialState = {
   isLoggedIn: false,
   user: {
-    //   email: '',
-    //   creatorId: '',
-    //   accountCategoryDtoList: [
-    //     {
-    //       job: '가수',
-    //       categoryName: '전체보기',
-    //       accountIdx: 0,
-    //       categoryIdx: 0,
-    //     },
-    //   ],
-    //   accountImg: '',
-    //   holdingSharingCnt: 0,
-    //   participateSharingCnt: 0,
-    //   accountIdx: 0,
-    //   creatorIdDatetime: '1997-01-01 00:00:00',
-    // } as User,
-    // accessToken: '',
-    // refreshToken: '',
     createDate: '1997-01-01 00:00:00',
     email: '',
     id: 0,
@@ -57,6 +39,7 @@ const initialState = {
       {
         categoryId: 0,
         id: 0,
+        categoryName: '',
       },
     ],
     userFavoritesList: [{nanumId: 0, id: 0}],
@@ -96,15 +79,15 @@ export const authSlice = createSlice({
     // updateName: (state, action: PayloadAction<string>) => {
     //   state.user.creatorId = action.payload
     // },
-    // updateCategory: (state, action: PayloadAction<IAccountCategoryDto[]>) => {
-    //   state.user.accountCategoryDtoList = action.payload
-    // },
+    updateCategory: (state, action: PayloadAction<IUserCategoryDto[]>) => {
+      state.user.userCategoryDtoList = action.payload
+    },
   },
 })
 
 const selectSelf = (state: Auth) => state
 export const userSelector = createDraftSafeSelector(selectSelf, state => state.user)
 export default authSlice.reducer
-export const {login, storeToken, logout} = authSlice.actions
+export const {login, storeToken, logout, updateCategory} = authSlice.actions
 
 export const token = (state: Auth) => state.token

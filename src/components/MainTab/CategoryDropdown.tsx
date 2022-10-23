@@ -10,7 +10,7 @@ import {useNavigation} from '@react-navigation/native'
 import {queryKeys, updateUserSelectedCategory} from '../../api'
 import {updateCategory} from '../../redux/slices'
 import {useAppSelector, useAppDispatch} from '../../hooks'
-import {IAccountCategoryDto} from '../../types'
+import {IUserCategoryDto} from '../../types'
 import * as theme from '../../theme'
 
 const MARGIN_TOP = isIphoneX() ? getStatusBarHeight() + 56 : 56
@@ -18,22 +18,22 @@ const MARGIN_TOP = isIphoneX() ? getStatusBarHeight() + 56 : 56
 type CategoryDropdownProps = {
   showCategoryModal: boolean
   setShowCategoryModal: React.Dispatch<React.SetStateAction<boolean>>
-  userCategory: IAccountCategoryDto
-  setUserCategory: React.Dispatch<React.SetStateAction<IAccountCategoryDto>>
-  categories: IAccountCategoryDto[]
+  userCategory: IUserCategoryDto
+  setUserCategory: React.Dispatch<React.SetStateAction<IUserCategoryDto>>
+  categories: IUserCategoryDto[]
 }
 
 type CategoryItemProps = {
-  userCategory: IAccountCategoryDto
-  currentCategory: IAccountCategoryDto
+  userCategory: IUserCategoryDto
+  currentCategory: IUserCategoryDto
   borderTop?: boolean
   borderBottom?: boolean
-  onPressItem: (category: IAccountCategoryDto) => void
+  onPressItem: (category: IUserCategoryDto) => void
 }
 
 const CategoryItem = ({userCategory, currentCategory, borderTop, borderBottom, onPressItem}: CategoryItemProps) => {
   // ******************** utils ********************
-  const selected: boolean = userCategory.categoryName == currentCategory.categoryName && userCategory.job == userCategory.job
+  const selected: boolean = userCategory.id == currentCategory.id
 
   // ******************** renderer ********************
   return (
@@ -53,10 +53,8 @@ export const CategoryDropdown = ({showCategoryModal, setShowCategoryModal, userC
   // ******************** states ********************
   const [categoryPressed, setCategoryPressed] = useState<boolean>(false)
   const user = useAppSelector(state => state.auth.user)
-  const [accountCategoryDtoList, setAccountCategoryDtoList] = useState(user.accountCategoryDtoList)
-  const accountIdx = useAppSelector(state => state.auth.user.accountIdx)
-
-  console.log(accountIdx)
+  const [userCategoryDtoList, setUserCategoryDtoList] = useState<IUserCategoryDto[]>(user.userCategoryDtoList)
+  const id = useAppSelector(state => state.auth.user.id)
 
   const updateUserSelectedCategoryQuery = useMutation(queryKeys.accountInfo, updateUserSelectedCategory, {
     onSuccess(data, variables, context) {
@@ -68,39 +66,40 @@ export const CategoryDropdown = ({showCategoryModal, setShowCategoryModal, userC
   })
 
   useEffect(() => {
-    setAccountCategoryDtoList(user.accountCategoryDtoList)
+    setUserCategoryDtoList(user.userCategoryDtoList)
   }, [user])
 
   // ******************** callbacks ********************
 
   const onPressItem = useCallback(
-    (category: IAccountCategoryDto) => {
-      setUserCategory(category)
-      const temp = accountCategoryDtoList.slice()
-      const idx = accountCategoryDtoList.indexOf(category)
-      console.log(temp)
-      temp.splice(idx, 1)
-      temp.unshift(category)
-      console.log(temp)
-      updateUserSelectedCategoryQuery.mutate({
-        accountCategoryDto: temp.map(item => {
-          return {
-            ...item,
-            accountIdx: accountIdx,
-          }
-        }),
-        accountIdx: accountIdx,
-      })
-      setAccountCategoryDtoList(temp)
-      dispatch(updateCategory(temp))
-      setShowCategoryModal(false)
+    (category: IUserCategoryDto) => {
+      // setUserCategory(category)
+      // const temp = userCategoryDtoList.slice()
+      // const idx = userCategoryDtoList.indexOf(category)
+      // console.log(temp)
+      // temp.splice(idx, 1)
+      // temp.unshift(category)
+      // console.log(temp)
+      // updateUserSelectedCategoryQuery.mutate({
+      //   accountCategoryDto: temp.map(item => {
+      //     return {
+      //       ...item,
+      //       accountIdx: accountIdx,
+      //     }
+      //   }),
+      //   accountIdx: accountIdx,
+      // })
+      // setUserCategoryDtoList(temp)
+      // dispatch(updateCategory(temp))
+      // setShowCategoryModal(false)
     },
-    [accountCategoryDtoList, accountIdx],
+    [userCategoryDtoList, id],
   )
 
   const onPressEditCategory = useCallback(() => {
     setShowCategoryModal(false)
     setCategoryPressed(true)
+    navigation.navigate('EditCategory')
     // 카테고리 수정하기로 이동하는 네비게이션 필요
   }, [])
 
@@ -133,7 +132,7 @@ export const CategoryDropdown = ({showCategoryModal, setShowCategoryModal, userC
           })}
           <CategoryItem
             userCategory={userCategory}
-            currentCategory={{categoryName: '수정하기', job: '가수', accountIdx: 0, categoryIdx: 0}}
+            currentCategory={{categoryName: '수정하기', id: user?.id, categoryId: -1}}
             borderBottom
             onPressItem={onPressEditCategory}
           />

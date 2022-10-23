@@ -24,3 +24,4 @@ export * from './oauthSerice'
 
 // new api
 export * from './userService'
+export * from './myPageService'

@@ -771,6 +771,12 @@ export type ISignInDto = {
   }[]
 }
 
+export type IUserCategoryDto = {
+  categoryId: number
+  id: number
+  categoryName: string
+}
+
 export type IUserDto = {
   createDate: string
   email: string
@@ -783,10 +789,7 @@ export type IUserDto = {
     id: number
   }[]
 
-  userCategoryDtoList: {
-    categoryId: number
-    id: number
-  }[]
+  userCategoryDtoList: IUserCategoryDto[]
 
   userFavoritesList: {
     id: number

@@ -6,4 +6,5 @@ const apiImageClient = axios.create({
     'content-type': 'multipart/form-data',
   },
 })
+
 export default apiImageClient
